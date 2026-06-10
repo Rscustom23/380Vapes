@@ -291,7 +291,7 @@
       <div id="s-history"><p style="font-size:1.3vw;color:#444;font-family:Arial,sans-serif;">No activity yet.</p></div>
     </div>
 
-    <div id="backup-banner" style="display:none;background:#1a0800;border:2px solid #FF3333;border-radius:6px;padding:10px 14px;margin-top:8px;justify-content:space-between;align-items:center;gap:10px;">
+    <div id="backup-banner" style="display:none;background:#1a0800;border:2px solid #FF3333;border-radius:6px;padding:10px 14px;margin-top:8px;gap:10px;">
       <div style="font-size:1.5vw;color:#FF3333;font-family:Arial,sans-serif;">⚠️ Daily backup due — tap to export your data</div>
       <button class="sm-btn" style="white-space:nowrap;flex-shrink:0;" onclick="doBackupExport()">Backup Now</button>
     </div>
@@ -812,6 +812,8 @@
     const banner=document.getElementById('backup-banner');
     if(last!==today){
       banner.style.display='flex';
+      banner.style.justifyContent='space-between';
+      banner.style.alignItems='center';
     } else {
       banner.style.display='none';
     }

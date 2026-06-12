@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<link rel="manifest" href="manifest.json">
+<title>380 Vapes Rewards</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 100%; height: 100%; background: #000; overflow: hidden; }
+  body { font-family: Georgia, 'Times New Roman', serif; }
+
+  /* ===== MAIN LAYOUT ===== */
+  .page {
+    display: none; width: 100vw; height: 100vh;
+    flex-direction: row;
+  }
+  .page.active { display: flex; }
+
+  .left { flex: 1; display: flex; flex-direction: column; justify-content: space-between; padding: 3vh 4vw; overflow: hidden; }
+  .right { width: 34vw; max-width: 380px; min-width: 240px; display: flex; flex-direction: column; padding: 2vh 3vw 2vh 0; }
+
+  /* ===== TYPOGRAPHY ===== */
+  .welcome { font-size: 8vw; font-weight: 700; color: #FFE000; line-height: 1; margin-bottom: 1.5vh; }
+  .prompt { font-size: 4.5vw; color: #fff; line-height: 1.3; margin-bottom: 2vh; }
+  .cust-name { font-size: 4vw; color: #FF3333; margin-bottom: 0.5vh; }
+  .cust-pts { font-size: 3.5vw; color: #FF3333; margin-bottom: 2vh; }
+  .handoff-msg { font-size: 2.8vw; color: #FFE000; line-height: 1.4; margin-bottom: 3vh; }
+  .branding { font-size: 4.5vw; font-weight: 700; color: #FFE000; cursor: pointer; user-select: none; padding: 1vh 0; }
+  .branding span { color: #fff; }
+
+  /* ===== BUTTONS ===== */
+  .yb {
+    border: 2px solid #FFE000; border-radius: 5px;
+    background: #000; color: #FFE000;
+    font-family: Arial, sans-serif; font-weight: 700;
+    cursor: pointer; text-align: center;
+    transition: background 0.1s, color 0.1s;
+  }
+  .yb:hover, .yb:active { background: #FFE000; color: #000; }
+  .yb.red { border-color: #FF3333; color: #FF3333; }
+  .yb.red:hover, .yb.red:active { background: #FF3333; color: #fff; }
+  .yb.block { width: 100%; display: block; padding: 12px; font-size: 2.2vw; margin-bottom: 10px; }
+  .yb.inline { display: inline-block; padding: 10px 18px; font-size: 2vw; align-self: flex-start; }
+  .yb.big { padding: 16px; font-size: 3vw; margin-bottom: 14px; }
+
+  /* ===== KEYPAD ===== */
+  .kbox { border: 3px solid #FFE000; border-radius: 6px; padding: 8px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
+  .kdisp {
+    border: 2px solid #FFE000; border-radius: 4px;
+    color: #FFE000; font-size: 2.8vw; font-weight: 700;
+    letter-spacing: 2px; text-align: center; padding: 8px;
+    min-height: 44px; display: flex; align-items: center; justify-content: center;
+    font-family: Arial, sans-serif; white-space: nowrap; flex-shrink: 0;
+  }
+  .kgrid { display: grid; grid-template-columns: repeat(3,1fr); gap: 5px; flex: 1; }
+  .key {
+    border: 2px solid #FFE000; border-radius: 4px;
+    background: #000; color: #FFE000; font-size: 2.8vw; font-weight: 600;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; user-select: none;
+    font-family: Arial, sans-serif; transition: background 0.1s, color 0.1s;
+  }
+  .key:hover, .key:active { background: #FFE000; color: #000; }
+  .key.sm { font-size: 1.8vw; }
+  .key.wide { grid-column: span 3; font-size: 2.2vw; font-weight: 700; min-height: 44px; flex-shrink: 0; }
+  .key.ghost { border-color: transparent; background: transparent; cursor: default; pointer-events: none; }
+
+  /* ===== OVERLAYS (full screen) ===== */
+  .overlay { display: none; position: fixed; inset: 0; background: #000; z-index: 50; flex-direction: row; overflow: hidden; }
+  .overlay.active { display: flex; }
+  .overlay.scroll { flex-direction: column; overflow-y: auto; padding: 3vh 4vw; }
+
+  /* Store */
+  #ov-store .left { overflow-y: auto; }
+  .emp-lbl { font-size: 2.5vw; font-weight: 700; color: #FF3333; font-family: Arial, sans-serif; margin-bottom: 1vh; }
+  .sf { font-size: 1.8vw; color: #FFE000; font-family: Arial, sans-serif; margin-bottom: 5px; }
+  .sf span { font-weight: 700; }
+
+  #bday-alert { display: none; background: #1a0a00; border: 2px solid #FF3333; border-radius: 6px; padding: 10px 12px; margin-bottom: 10px; }
+  #bday-alert.show { display: block; }
+  .ba-title { font-size: 1.8vw; font-weight: 700; color: #FF3333; margin-bottom: 8px; font-family: Arial, sans-serif; }
+  .ba-btns { display: flex; gap: 8px; }
+  .ba-btn { flex: 1; padding: 8px; font-size: 1.6vw; font-weight: 700; border: 2px solid #FFE000; border-radius: 4px; background: #000; color: #FFE000; cursor: pointer; text-align: center; font-family: Arial, sans-serif; transition: background 0.1s, color 0.1s; }
+  .ba-btn:hover { background: #FFE000; color: #000; }
+
+  .rwd { padding: 10px; font-size: 1.6vw; font-weight: 700; border: 2px solid #444; border-radius: 4px; background: #111; color: #444; cursor: not-allowed; text-align: center; font-family: Arial, sans-serif; margin-bottom: 8px; width: 100%; transition: background 0.1s, color 0.1s; }
+  .rwd.on { border-color: #FFE000; color: #FFE000; background: #000; cursor: pointer; }
+  .rwd.on:hover { background: #FFE000; color: #000; }
+  .rwd.bday { border-color: #FF3333; color: #FF3333; background: #000; cursor: pointer; }
+  .rwd.bday:hover { background: #FF3333; color: #fff; }
+
+  .hbox { border: 2px solid #FFE000; border-radius: 4px; padding: 8px; flex: 1; overflow-y: auto; display: flex; flex-direction: column; min-height: 60px; }
+  .hbox-hdr { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+  .htitle { font-size: 1.4vw; font-weight: 700; color: #FFE000; font-family: Arial, sans-serif; }
+  .hview { font-size: 1.1vw; padding: 3px 8px; border: 1px solid #FFE000; border-radius: 4px; background: #000; color: #FFE000; cursor: pointer; font-family: Arial, sans-serif; }
+  .hview:hover { background: #FFE000; color: #000; }
+  .hi { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid #1a1a1a; font-size: 1.2vw; font-family: Arial, sans-serif; cursor: pointer; }
+  .hi:last-child { border-bottom: none; }
+  .hi:hover { background: #0d0d0d; }
+  .hn { color: #FFE000; font-weight: 700; }
+  .hd { color: #888; }
+  .ht { color: #444; font-size: 1vw; }
+  .pp { color: #4CAF50; font-weight: 700; }
+  .pm { color: #FF3333; font-weight: 700; }
+
+  .sbot { display: flex; align-items: center; gap: 8px; padding-top: 1vh; flex-shrink: 0; }
+  .sbot .branding { font-size: 3.5vw; padding: 0; }
+  .sbtn { padding: 8px 14px; font-size: 1.6vw; font-weight: 700; border: 2px solid #FFE000; border-radius: 4px; background: #000; color: #FFE000; cursor: pointer; font-family: Arial, sans-serif; transition: background 0.1s, color 0.1s; white-space: nowrap; }
+  .sbtn:hover { background: #FFE000; color: #000; }
+  .sbtn.red { border-color: #FF3333; color: #FF3333; }
+  .sbtn.red:hover { background: #FF3333; color: #fff; }
+
+  /* Sign up */
+  #ov-signup { flex-direction: row; }
+  #ov-signup .left { overflow-y: auto; }
+  #ov-signup h2 { font-size: 4vw; color: #FFE000; margin-bottom: 2vh; font-family: Arial, sans-serif; }
+  .sl { font-size: 1.5vw; color: #aaa; margin-bottom: 4px; font-family: Arial, sans-serif; }
+  .si { width: 100%; padding: 10px; font-size: 1.8vw; border: 2px solid #FFE000; border-radius: 6px; background: #000; color: #FFE000; margin-bottom: 12px; font-family: Arial, sans-serif; }
+  .si::placeholder { color: #444; }
+  .si:focus { outline: none; border-color: #fff; }
+  .sb { width: 100%; padding: 12px; font-size: 1.8vw; font-weight: 700; border: 2px solid #FFE000; border-radius: 6px; background: #000; color: #FFE000; cursor: pointer; margin-bottom: 8px; font-family: Arial, sans-serif; transition: background 0.1s, color 0.1s; }
+  .sb:hover { background: #FFE000; color: #000; }
+  .sb.back { border-color: #FF3333; color: #FF3333; }
+  .sb.back:hover { background: #FF3333; color: #fff; }
+
+  /* Admin */
+  #ov-admin { flex-direction: column; padding: 3vh 4vw; overflow-y: auto; }
+  .ahdr { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2vh; }
+  .ahdr h2 { font-size: 3vw; color: #FF3333; font-family: Arial, sans-serif; }
+  .ab { padding: 8px 16px; font-size: 1.4vw; font-weight: 700; border: 2px solid #FFE000; border-radius: 6px; background: #000; color: #FFE000; cursor: pointer; font-family: Arial, sans-serif; transition: background 0.1s, color 0.1s; white-space: nowrap; }
+  .ab:hover { background: #FFE000; color: #000; }
+  .ab.red { border-color: #FF3333; color: #FF3333; }
+  .ab.red:hover { background: #FF3333; color: #fff; }
+  .scards { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-bottom: 2vh; }
+  .sc { background: #111; border: 1px solid #333; border-radius: 6px; padding: 10px; text-align: center; }
+  .sc .v { font-size: 2.2vw; font-weight: 700; color: #FFE000; font-family: Arial, sans-serif; }
+  .sc .l { font-size: 1vw; color: #888; font-family: Arial, sans-serif; margin-top: 2px; }
+  .asec { font-size: 1.2vw; font-weight: 700; color: #FF3333; text-transform: uppercase; margin: 1.2vh 0 0.6vh; font-family: Arial, sans-serif; }
+  .ai { padding: 8px 10px; font-size: 1.3vw; border: 2px solid #FFE000; border-radius: 6px; background: #000; color: #FFE000; font-family: Arial, sans-serif; }
+  .ai::placeholder { color: #444; }
+  .ai:focus { outline: none; border-color: #fff; }
+  .arow { display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 8px; align-items: end; margin-bottom: 1rem; }
+  .srow { display: flex; gap: 8px; margin-bottom: 1rem; }
+  .tw { overflow-x: auto; overflow-y: auto; max-height: 38vh; border: 1px solid #333; border-radius: 6px; }
+  .at { width: 100%; border-collapse: collapse; font-size: 1.2vw; font-family: Arial, sans-serif; }
+  .at th { color: #FF3333; font-weight: 700; text-align: left; padding: 7px 8px; border-bottom: 2px solid #333; white-space: nowrap; position: sticky; top: 0; background: #000; z-index: 1; }
+  .at td { color: #FFE000; padding: 6px 8px; border-bottom: 1px solid #1a1a1a; white-space: nowrap; }
+  .at tr:hover td { background: #0d0d0d; }
+
+  /* Full history */
+  #ov-hist { flex-direction: column; padding: 3vh 4vw; overflow-y: auto; }
+  #ov-hist h2 { font-size: 3vw; color: #FF3333; font-family: Arial, sans-serif; margin-bottom: 2vh; }
+
+  /* Modals */
+  .mb { position: fixed; inset: 0; background: rgba(0,0,0,0.93); display: none; align-items: center; justify-content: center; z-index: 200; }
+  .mb.on { display: flex; }
+  .md { background: #0d0d0d; border: 2px solid #FFE000; border-radius: 10px; padding: 1.5rem; width: 90%; max-width: 460px; max-height: 90vh; overflow-y: auto; }
+  .md h3 { color: #FF3333; font-size: 1.8vw; margin-bottom: 1rem; font-family: Arial, sans-serif; }
+  .ml { font-size: 1.2vw; color: #888; margin-bottom: 4px; font-family: Arial, sans-serif; }
+  .mi { width: 100%; padding: 8px; font-size: 1.3vw; border: 2px solid #FFE000; border-radius: 6px; background: #000; color: #FFE000; margin-bottom: 8px; font-family: Arial, sans-serif; }
+  .mbtns { display: flex; gap: 8px; margin-top: 0.5rem; }
+  .mbtns .ab { flex: 1; text-align: center; }
+
+  .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #FFE000; color: #000; padding: 8px 20px; border-radius: 20px; font-size: 1.4vw; font-weight: 700; opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 999; white-space: nowrap; font-family: Arial, sans-serif; }
+  .toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<!-- PAGE 1: CUSTOMER -->
+<div id="pg-customer" class="page active">
+  <div class="left">
+    <div>
+      <div class="welcome">WELCOME!</div>
+      <div class="prompt">Pleas Enter<br>Your Number</div>
+      <div class="yb inline" onclick="showSignup()" style="margin-bottom:2vh;">Sign Up</div>
+    </div>
+    <div class="branding" onclick="goHandoff(null)">380 <span>Vapes</span></div>
+  </div>
+  <div class="right">
+    <div class="kbox">
+      <div class="kdisp" id="ph-disp"><span style="color:#444;">XXX-XXX-XXXX</span></div>
+      <div class="kgrid">
+        <div class="key" onclick="kp('1')">1</div><div class="key" onclick="kp('2')">2</div><div class="key" onclick="kp('3')">3</div>
+        <div class="key" onclick="kp('4')">4</div><div class="key" onclick="kp('5')">5</div><div class="key" onclick="kp('6')">6</div>
+        <div class="key" onclick="kp('7')">7</div><div class="key" onclick="kp('8')">8</div><div class="key" onclick="kp('9')">9</div>
+        <div class="key sm" onclick="kd()">Back</div><div class="key" onclick="kp('0')">0</div><div class="key ghost"></div>
+      </div>
+      <div class="key wide" onclick="ke()">Enter</div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE 2: HANDOFF -->
+<div id="pg-handoff" class="page">
+  <div class="left" style="justify-content:center;">
+    <div class="welcome">WELCOME!</div>
+    <div class="cust-name" id="h-name"></div>
+    <div class="cust-pts" id="h-pts"></div>
+    <div class="handoff-msg">Please hand the tablet<br>to our employee.</div>
+    <div style="max-width:300px;">
+      <div class="yb big block" onclick="goStore()">Employee Access</div>
+      <div class="yb big block red" onclick="resetCust()">Exit</div>
+    </div>
+    <div class="branding" style="margin-top:auto;" onclick="goStore()">380 <span>Vapes</span></div>
+  </div>
+  <div class="right" style="opacity:0;pointer-events:none;">
+    <div class="kbox"></div>
+  </div>
+</div>
+
+<!-- SIGN UP OVERLAY -->
+<div id="ov-signup" class="overlay">
+  <div class="left">
+    <div>
+      <h2>Sign Up for Rewards</h2>
+      <div class="sl">Your Name</div>
+      <input class="si" id="su-name" type="text" placeholder="First and last name" />
+      <div class="sl">Phone Number</div>
+      <input class="si" id="su-phone" type="tel" placeholder="Your phone number" />
+      <div class="sl">Birthday (optional — get a birthday gift!)</div>
+      <input class="si" id="su-bday" type="date" />
+      <button class="sb" onclick="createCust()">Create My Account</button>
+      <button class="sb back" onclick="closeSignup()">Back</button>
+    </div>
+    <div class="branding" style="cursor:default;">380 <span>Vapes</span></div>
+  </div>
+  <div class="right" style="opacity:0.06;pointer-events:none;">
+    <div class="kbox"></div>
+  </div>
+</div>
+
+<!-- STORE OVERLAY -->
+<div id="ov-store" class="overlay">
+  <div class="left">
+    <div>
+      <div class="emp-lbl">Employee Screen</div>
+      <div class="sf">Customers Name: <span id="s-name">—</span></div>
+      <div class="sf">Rewards Balance: <span id="s-pts">—</span></div>
+      <div class="sf" style="margin-bottom:1.5vh;">Birthday: <span id="s-bday">—</span></div>
+
+      <div id="bday-alert">
+        <div class="ba-title">🎂 It's <span id="ba-name"></span>'s Birthday today!</div>
+        <div class="ba-btns">
+          <div class="ba-btn" onclick="bdayGift('Free Drink')">Free Drink</div>
+          <div class="ba-btn" onclick="bdayGift('$10 Off')">$10 Off</div>
+        </div>
+      </div>
+
+      <div id="r-10off" class="rwd" onclick="redeem('10% Off')">10% Off</div>
+      <div id="r-drink" class="rwd" onclick="redeem('Cold Drink')">Cold Drink</div>
+      <div id="r-bday" class="rwd" onclick="openBdayModal()">🎂 Birthday Gift</div>
+    </div>
+
+    <div class="hbox" style="margin-top:1vh;">
+      <div class="hbox-hdr">
+        <div class="htitle">History</div>
+        <div class="hview" onclick="showFullHist()">View All</div>
+      </div>
+      <div id="s-hist"><p style="font-size:1.2vw;color:#444;font-family:Arial,sans-serif;">No activity yet.</p></div>
+    </div>
+
+    <div class="sbot">
+      <div class="branding" onclick="exitStore()">380 <span>Vapes</span></div>
+      <button class="sbtn" onclick="showAdmin()">Admin</button>
+      <button class="sbtn red" onclick="exitStore()">Exit</button>
+    </div>
+  </div>
+
+  <div class="right">
+    <div class="kbox">
+      <div class="kdisp" id="amt-disp"><span style="color:#444;">$ amount</span></div>
+      <div class="kgrid">
+        <div class="key" onclick="ap('1')">1</div><div class="key" onclick="ap('2')">2</div><div class="key" onclick="ap('3')">3</div>
+        <div class="key" onclick="ap('4')">4</div><div class="key" onclick="ap('5')">5</div><div class="key" onclick="ap('6')">6</div>
+        <div class="key" onclick="ap('7')">7</div><div class="key" onclick="ap('8')">8</div><div class="key" onclick="ap('9')">9</div>
+        <div class="key sm" onclick="ad()">Back</div><div class="key" onclick="ap('0')">0</div><div class="key ghost"></div>
+      </div>
+      <div class="key wide" onclick="addPts()">Add Points</div>
+    </div>
+  </div>
+</div>
+
+<!-- FULL HISTORY OVERLAY -->
+<div id="ov-hist" class="overlay">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2vh;">
+    <h2>Full History</h2>
+    <div style="display:flex;gap:8px;">
+      <button class="ab" onclick="exportHist()">Export CSV</button>
+      <button class="ab" onclick="showOv('ov-store')">Back</button>
+    </div>
+  </div>
+  <div class="tw" style="max-height:80vh;">
+    <table class="at">
+      <thead><tr><th>Time</th><th>Name</th><th>Phone</th><th>Type</th><th>Pts</th><th>Detail</th></tr></thead>
+      <tbody id="hist-body"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ADMIN OVERLAY -->
+<div id="ov-admin" class="overlay">
+  <div class="ahdr">
+    <h2>Admin</h2>
+    <button class="ab" onclick="showOv('ov-store')">Back</button>
+  </div>
+  <div class="scards" id="a-stats"></div>
+
+  <div class="asec">Birthdays This Month</div>
+  <div id="a-bdays" style="margin-bottom:1vh;font-size:1.3vw;color:#FFE000;font-family:Arial,sans-serif;"></div>
+
+  <div class="asec">Add Customer Manually</div>
+  <div class="arow">
+    <div>
+      <div style="font-size:1.1vw;color:#888;margin-bottom:3px;font-family:Arial,sans-serif;">Name</div>
+      <input class="ai" id="m-name" type="text" placeholder="Full name" style="width:100%;" />
+    </div>
+    <div>
+      <div style="font-size:1.1vw;color:#888;margin-bottom:3px;font-family:Arial,sans-serif;">Phone</div>
+      <input class="ai" id="m-phone" type="tel" placeholder="Phone number" style="width:100%;" />
+    </div>
+    <div>
+      <div style="font-size:1.1vw;color:#888;margin-bottom:3px;font-family:Arial,sans-serif;">Birthday</div>
+      <input class="ai" id="m-bday" type="date" style="width:100%;" />
+    </div>
+    <button class="ab" style="height:40px;" onclick="manAdd()">Add</button>
+  </div>
+
+  <div class="asec">Customer Records</div>
+  <div class="srow">
+    <input class="ai" id="a-search" type="text" placeholder="Search by name or phone..." style="flex:1;" oninput="renderTbl()" />
+    <button class="ab" onclick="exportCSV()">Export CSV</button>
+    <button class="ab" onclick="trigImp()">Import CSV</button>
+    <input type="file" id="imp-file" accept=".csv" style="display:none;" onchange="importCSV(event)" />
+  </div>
+  <div class="tw">
+    <table class="at">
+      <thead><tr><th>Name</th><th>Phone</th><th>Pts</th><th>Lifetime</th><th>Visits</th><th>Last Visit</th><th>Joined</th><th>Birthday</th><th>Notes</th><th></th></tr></thead>
+      <tbody id="a-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- EDIT MODAL -->
+<div class="mb" id="edit-mb">
+  <div class="md">
+    <h3>Edit Customer</h3>
+    <input type="hidden" id="e-key" />
+    <div class="ml">Name</div><input class="mi" id="e-name" type="text" />
+    <div class="ml">Phone</div><input class="mi" id="e-phone" type="tel" />
+    <div class="ml">Points</div><input class="mi" id="e-pts" type="number" />
+    <div class="ml">Birthday</div><input class="mi" id="e-bday" type="date" />
+    <div class="ml">Notes</div><input class="mi" id="e-notes" type="text" placeholder="Optional" />
+    <div class="mbtns">
+      <button class="ab" onclick="saveEdit()">Save</button>
+      <button class="ab red" onclick="delCust()">Delete</button>
+      <button class="ab" style="border-color:#555;color:#888;" onclick="closeEdit()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADJUST MODAL -->
+<div class="mb" id="adj-mb">
+  <div class="md">
+    <h3>Adjust Points</h3>
+    <input type="hidden" id="adj-ph" />
+    <div class="ml" id="adj-info" style="color:#FFE000;margin-bottom:10px;font-size:1.3vw;"></div>
+    <div class="ml">New Points Balance</div>
+    <input class="mi" id="adj-pts" type="number" min="0" />
+    <div class="ml" style="color:#888;margin-bottom:6px;">Adjust by amount:</div>
+    <div style="display:flex;gap:8px;margin-bottom:10px;">
+      <input class="mi" id="adj-d" type="number" placeholder="e.g. 50 or -25" style="flex:1;margin:0;" />
+      <button class="ab" onclick="applyD()">Apply</button>
+    </div>
+    <div class="mbtns">
+      <button class="ab" onclick="saveAdj()">Save</button>
+      <button class="ab" style="border-color:#555;color:#888;" onclick="closeAdj()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- BIRTHDAY MODAL -->
+<div class="mb" id="bday-mb">
+  <div class="md" style="border-color:#FF3333;">
+    <h3>🎂 Birthday Gift</h3>
+    <div style="font-size:1.4vw;color:#FFE000;margin-bottom:1.2rem;font-family:Arial,sans-serif;" id="bday-mn"></div>
+    <div class="ba-btns">
+      <div class="ba-btn" onclick="bdayGift('Free Drink')">Free Drink</div>
+      <div class="ba-btn" onclick="bdayGift('$10 Off')">$10 Off</div>
+    </div>
+    <div style="margin-top:10px;">
+      <button class="ab" style="width:100%;text-align:center;border-color:#555;color:#888;" onclick="closeBdayModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  let cPhone='', cCust=null, amt='';
+
+  function gd(){try{return JSON.parse(localStorage.getItem('v380_c')||'{}');}catch(e){return{};}}
+  function sd(d){localStorage.setItem('v380_c',JSON.stringify(d));}
+  function gh(){try{return JSON.parse(localStorage.getItem('v380_h')||'[]');}catch(e){return[];}}
+  function sh(h){localStorage.setItem('v380_h',JSON.stringify(h));}
+  function lh(ph,nm,tp,pt,dt){const h=gh();h.unshift({ts:new Date().toLocaleString(),phone:ph,name:nm,type:tp,pts:pt,detail:dt});sh(h);}
+
+  function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
+
+  function showPg(id){
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    document.querySelectorAll('.overlay').forEach(o=>o.classList.remove('active'));
+    const el=document.getElementById(id);
+    if(el.classList.contains('page'))el.classList.add('active');
+    else el.classList.add('active');
+  }
+  function showOv(id){
+    document.querySelectorAll('.overlay').forEach(o=>o.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+  }
+
+  function fp(p){if(!p)return'';p=String(p).replace(/\D/g,'');if(p.length<=3)return p;if(p.length<=6)return p.slice(0,3)+'-'+p.slice(3);return p.slice(0,3)+'-'+p.slice(3,6)+'-'+p.slice(6);}
+  function fb(b){if(!b)return'—';const x=b.split('-');if(x.length<3)return b;const m=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];return m[parseInt(x[1])-1]+' '+parseInt(x[2]);}
+  function isBday(b){if(!b)return false;const n=new Date();const x=b.split('-');return parseInt(x[1])===n.getMonth()+1&&parseInt(x[2])===n.getDate();}
+
+  function updPh(){const el=document.getElementById('ph-disp');el.innerHTML=cPhone?'<span style="color:#FFE000;">'+fp(cPhone)+'</span>':'<span style="color:#444;">XXX-XXX-XXXX</span>';}
+  function kp(d){if(cPhone.length<10){cPhone+=d;updPh();}}
+  function kd(){cPhone=cPhone.slice(0,-1);updPh();}
+  function ke(){
+    if(cPhone.length<7){toast('Please enter at least 7 digits');return;}
+    const data=gd();
+    if(data[cPhone]){cCust=data[cPhone];goHandoff(cCust);}
+    else{goHandoff(null);}
+  }
+
+  function goHandoff(c){
+    if(c){
+      document.getElementById('h-name').textContent=c.name;
+      document.getElementById('h-pts').textContent='You have '+c.points+' points';
+    } else {
+      document.getElementById('h-name').textContent='';
+      document.getElementById('h-pts').textContent=cPhone.length>=7?'Number not found — please Sign Up':'';
+    }
+    showPg('pg-handoff');
+  }
+
+  function resetCust(){cPhone='';cCust=null;amt='';updPh();showPg('pg-customer');}
+  function goStore(){loadStore();showOv('ov-store');}
+
+  function showSignup(){
+    document.getElementById('su-name').value='';
+    document.getElementById('su-phone').value=cPhone?fp(cPhone):'';
+    document.getElementById('su-bday').value='';
+    showOv('ov-signup');
+  }
+  function closeSignup(){showPg('pg-customer');}
+  function createCust(){
+    const name=document.getElementById('su-name').value.trim();
+    const phone=document.getElementById('su-phone').value.replace(/\D/g,'');
+    if(!name){toast('Please enter a name');return;}
+    if(phone.length<7){toast('Please enter a valid phone number');return;}
+    const bday=document.getElementById('su-bday').value;
+    const data=gd();
+    if(data[phone]){toast('That number is already registered');return;}
+    cCust={phone,name,birthday:bday,points:0,lifetime:0,visits:0,lastVisit:'',joined:new Date().toLocaleDateString(),notes:''};
+    data[phone]=cCust;sd(data);
+    cPhone=phone;updPh();
+    goHandoff(cCust);toast('Welcome, '+name+'!');
+  }
+
+  function loadStore(){
+    amt='';updAmt();
+    if(cCust){
+      document.getElementById('s-name').textContent=cCust.name;
+      document.getElementById('s-pts').textContent=cCust.points+' pts';
+      document.getElementById('s-bday').textContent=fb(cCust.birthday);
+      const bd=isBday(cCust.birthday);
+      document.getElementById('bday-alert').classList.toggle('show',bd);
+      if(bd)document.getElementById('ba-name').textContent=cCust.name;
+    } else {
+      document.getElementById('s-name').textContent='No customer loaded';
+      document.getElementById('s-pts').textContent='—';
+      document.getElementById('s-bday').textContent='—';
+      document.getElementById('bday-alert').classList.remove('show');
+    }
+    updRwds();renderHist();chkBackup();
+  }
+
+  function updRwds(){
+    const on=cCust&&cCust.points>=125;
+    const bd=cCust&&isBday(cCust.birthday);
+    document.getElementById('r-10off').className='rwd'+(on?' on':'');
+    document.getElementById('r-drink').className='rwd'+(on?' on':'');
+    const rb=document.getElementById('r-bday');
+    rb.className='rwd'+(bd?' bday':'');
+  }
+
+  function updAmt(){const el=document.getElementById('amt-disp');el.innerHTML=amt?'<span style="color:#FFE000;">$'+amt+'</span>':'<span style="color:#444;">$ amount</span>';}
+  function ap(d){if(amt.includes('.')&&amt.split('.')[1].length>=2)return;if(amt.length>=7)return;amt+=d;updAmt();}
+  function ad(){amt=amt.slice(0,-1);updAmt();}
+
+  function addPts(){
+    if(!cCust){toast('No customer loaded');return;}
+    const a=parseFloat(amt);if(!a||a<=0){toast('Enter a purchase amount');return;}
+    const p=Math.floor(a);const data=gd();
+    cCust.points+=p;cCust.lifetime+=p;cCust.visits+=1;cCust.lastVisit=new Date().toLocaleDateString();
+    data[cCust.phone]=cCust;sd(data);
+    lh(cCust.phone,cCust.name,'Purchase',p,'$'+a.toFixed(2));
+    amt='';loadStore();toast('+'+p+' points!');
+  }
+
+  function redeem(type){
+    if(!cCust||cCust.points<125)return;
+    const data=gd();cCust.points-=125;data[cCust.phone]=cCust;sd(data);
+    lh(cCust.phone,cCust.name,'Reward',-125,type);loadStore();toast(type+' redeemed!');
+  }
+
+  function openBdayModal(){
+    if(!cCust||!isBday(cCust.birthday))return;
+    document.getElementById('bday-mn').textContent='Give '+cCust.name+' a birthday gift:';
+    document.getElementById('bday-mb').classList.add('on');
+  }
+  function closeBdayModal(){document.getElementById('bday-mb').classList.remove('on');}
+  function bdayGift(type){
+    if(!cCust)return;
+    lh(cCust.phone,cCust.name,'Birthday Gift',0,type);
+    closeBdayModal();document.getElementById('bday-alert').classList.remove('show');
+    renderHist();toast('Birthday '+type+' given!');
+  }
+
+  function renderHist(){
+    const h=gh().slice(0,10);const el=document.getElementById('s-hist');
+    if(!h.length){el.innerHTML='<p style="font-size:1.2vw;color:#444;font-family:Arial,sans-serif;">No activity yet.</p>';return;}
+    el.innerHTML=h.map(e=>{const cls=e.pts>0?'pp':e.pts<0?'pm':'';const s=e.pts>0?'+':'';const p=e.pts===0?'Gift':`${s}${e.pts}`;
+      return`<div class="hi" onclick="openAdj('${e.phone}')"><div><span class="hn">${e.name}</span> — <span class="hd">${e.detail}</span><br><span class="ht">${e.ts}</span></div><div class="${cls}">${p}</div></div>`;
+    }).join('');
+  }
+
+  function showFullHist(){
+    const h=gh();const tb=document.getElementById('hist-body');
+    if(!h.length){tb.innerHTML='<tr><td colspan="6" style="color:#444;text-align:center;padding:1rem;">No history yet.</td></tr>';}
+    else{tb.innerHTML=h.map(e=>{const s=e.pts>0?'+':'';const p=e.pts===0?'Gift':`${s}${e.pts}`;const cls=e.pts>0?'pp':e.pts<0?'pm':'';
+      return`<tr><td>${e.ts}</td><td>${e.name}</td><td>${fp(e.phone)}</td><td>${e.type}</td><td class="${cls}">${p}</td><td>${e.detail}</td></tr>`;}).join('');}
+    showOv('ov-hist');
+  }
+
+  function exportHist(){
+    const h=gh();if(!h.length){toast('No history to export');return;}
+    const hdr=['Time','Name','Phone','Type','Points','Detail'];
+    const csv=[hdr.join(','),...h.map(e=>[e.ts,e.name,fp(e.phone),e.type,e.pts,e.detail].map(v=>'"'+(v||'')+'"').join(','))].join('\n');
+    const blob=new Blob([csv],{type:'text/csv'});const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');a.href=url;a.download='380vapes_history_'+new Date().toISOString().slice(0,10)+'.csv';a.click();URL.revokeObjectURL(url);
+    toast('Saved to Downloads folder');
+  }
+
+  function openAdj(phone){
+    const data=gd();const c=data[phone];if(!c)return;
+    document.getElementById('adj-ph').value=phone;
+    document.getElementById('adj-info').textContent=c.name+' — Balance: '+c.points+' pts';
+    document.getElementById('adj-pts').value=c.points;document.getElementById('adj-d').value='';
+    document.getElementById('adj-mb').classList.add('on');
+  }
+  function applyD(){
+    const ph=document.getElementById('adj-ph').value;const data=gd();const c=data[ph];if(!c)return;
+    const d=parseInt(document.getElementById('adj-d').value);if(isNaN(d)){toast('Enter a number');return;}
+    document.getElementById('adj-pts').value=Math.max(0,c.points+d);document.getElementById('adj-d').value='';
+  }
+  function saveAdj(){
+    const ph=document.getElementById('adj-ph').value;const data=gd();const c=data[ph];if(!c)return;
+    const np=parseInt(document.getElementById('adj-pts').value);if(isNaN(np)||np<0){toast('Enter a valid balance');return;}
+    const diff=np-c.points;const s=diff>=0?'+':'';
+    c.points=np;data[ph]=c;sd(data);
+    lh(ph,c.name,'Adjustment',diff,'Manual: '+s+diff);
+    if(cCust&&cCust.phone===ph)cCust.points=np;
+    closeAdj();loadStore();toast('Balance updated to '+np+' pts');
+  }
+  function closeAdj(){document.getElementById('adj-mb').classList.remove('on');}
+
+  function exitStore(){cPhone='';cCust=null;amt='';updPh();showPg('pg-customer');}
+
+  function chkBackup(){
+    const last=localStorage.getItem('v380_bk')||'';
+    const today=new Date().toLocaleDateString();
+    if(last!==today)toast('Reminder: Export a backup from Admin today!');
+  }
+
+  function showAdmin(){renderStats();renderBdays();renderTbl();showOv('ov-admin');}
+
+  function renderStats(){
+    const data=gd();const c=Object.values(data);
+    const tot=c.length;const tp=c.reduce((s,x)=>s+x.lifetime,0);
+    const now=new Date();const ms=new Date(now.getFullYear(),now.getMonth(),1);
+    const act=c.filter(x=>x.lastVisit&&new Date(x.lastVisit)>=ms).length;
+    const top=[...c].sort((a,b)=>b.visits-a.visits)[0];
+    document.getElementById('a-stats').innerHTML=`
+      <div class="sc"><div class="v">${tot}</div><div class="l">Customers</div></div>
+      <div class="sc"><div class="v">${tp.toLocaleString()}</div><div class="l">Lifetime Pts</div></div>
+      <div class="sc"><div class="v">${act}</div><div class="l">Active This Month</div></div>
+      <div class="sc"><div class="v">${top?top.name.split(' ')[0]:'—'}</div><div class="l">Top Visitor</div></div>`;
+  }
+
+  function renderBdays(){
+    const data=gd();const m=new Date().getMonth()+1;
+    const pp=Object.values(data).filter(c=>c.birthday&&parseInt(c.birthday.split('-')[1])===m);
+    const el=document.getElementById('a-bdays');
+    el.innerHTML=pp.length?pp.map(c=>`🎂 ${c.name} (${fp(c.phone)}) — ${fb(c.birthday)}`).join(' &nbsp;|&nbsp; '):'No birthdays this month.';
+  }
+
+  function renderTbl(){
+    const data=gd();const q=(document.getElementById('a-search').value||'').toLowerCase();
+    let rows=Object.values(data);if(q)rows=rows.filter(c=>c.name.toLowerCase().includes(q)||c.phone.includes(q));
+    rows.sort((a,b)=>a.name.localeCompare(b.name));
+    const tb=document.getElementById('a-tbody');
+    if(!rows.length){tb.innerHTML='<tr><td colspan="10" style="color:#444;text-align:center;padding:1rem;">No customers found.</td></tr>';return;}
+    tb.innerHTML=rows.map(c=>`<tr><td>${c.name}</td><td>${fp(c.phone)}</td><td>${c.points}</td><td>${c.lifetime}</td><td>${c.visits}</td><td>${c.lastVisit||'—'}</td><td>${c.joined||'—'}</td><td>${fb(c.birthday)}</td><td>${c.notes||'—'}</td><td><button class="ab" style="padding:4px 8px;" onclick="openEdit('${c.phone}')">Edit</button></td></tr>`).join('');
+  }
+
+  function exportCSV(){
+    const data=gd();const rows=Object.values(data);if(!rows.length){toast('No data to export');return;}
+    const hdr=['Name','Phone','Points','Lifetime','Visits','Last Visit','Joined','Birthday','Notes'];
+    const csv=[hdr.join(','),...rows.map(c=>[c.name,fp(c.phone),c.points,c.lifetime,c.visits,c.lastVisit||'',c.joined||'',c.birthday||'',c.notes||''].map(v=>'"'+(v||'')+'"').join(','))].join('\n');
+    const blob=new Blob([csv],{type:'text/csv'});const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');a.href=url;a.download='380vapes_customers_'+new Date().toISOString().slice(0,10)+'.csv';a.click();URL.revokeObjectURL(url);
+    localStorage.setItem('v380_bk',new Date().toLocaleDateString());
+    toast('Saved to Downloads folder');
+  }
+
+  function trigImp(){document.getElementById('imp-file').click();}
+  function importCSV(event){
+    const file=event.target.files[0];if(!file)return;
+    const reader=new FileReader();
+    reader.onload=function(e){
+      const lines=e.target.result.split('\n').filter(l=>l.trim());
+      if(lines.length<2){toast('Empty or invalid CSV');return;}
+      const data=gd();let imp=0;
+      for(let i=1;i<lines.length;i++){
+        const vals=[];let cur='',inQ=false;
+        for(let ch of lines[i]){if(ch==='"'){inQ=!inQ;}else if(ch===','&&!inQ){vals.push(cur.trim());cur='';}else{cur+=ch;}}
+        vals.push(cur.trim());
+        const name=vals[0];const phone=(vals[1]||'').replace(/\D/g,'');
+        if(!name||!phone)continue;
+        data[phone]={phone,name,points:parseInt(vals[2])||0,lifetime:parseInt(vals[3])||0,visits:parseInt(vals[4])||0,lastVisit:vals[5]||'',joined:vals[6]||new Date().toLocaleDateString(),birthday:vals[7]||'',notes:vals[8]||''};
+        imp++;
+      }
+      sd(data);renderStats();renderTbl();toast(imp+' customers imported!');event.target.value='';
+    };
+    reader.readAsText(file);
+  }
+
+  function manAdd(){
+    const name=document.getElementById('m-name').value.trim();const phone=document.getElementById('m-phone').value.replace(/\D/g,'');const bday=document.getElementById('m-bday').value;
+    if(!name||phone.length<7){toast('Name and valid phone required');return;}
+    const data=gd();if(data[phone]){toast('Already registered');return;}
+    data[phone]={phone,name,birthday:bday,points:0,lifetime:0,visits:0,lastVisit:'',joined:new Date().toLocaleDateString(),notes:''};
+    sd(data);document.getElementById('m-name').value='';document.getElementById('m-phone').value='';document.getElementById('m-bday').value='';
+    renderStats();renderTbl();toast(name+' added!');
+  }
+
+  function openEdit(phone){
+    const data=gd();const c=data[phone];if(!c)return;
+    document.getElementById('e-key').value=phone;document.getElementById('e-name').value=c.name;
+    document.getElementById('e-phone').value=c.phone;document.getElementById('e-pts').value=c.points;
+    document.getElementById('e-bday').value=c.birthday||'';document.getElementById('e-notes').value=c.notes||'';
+    document.getElementById('edit-mb').classList.add('on');
+  }
+  function saveEdit(){
+    const old=document.getElementById('e-key').value;const name=document.getElementById('e-name').value.trim();const phone=document.getElementById('e-phone').value.replace(/\D/g,'');
+    if(!name||!phone){toast('Name and phone required');return;}
+    const data=gd();const c=data[old];if(!c)return;
+    c.name=name;c.phone=phone;c.points=parseInt(document.getElementById('e-pts').value)||0;c.birthday=document.getElementById('e-bday').value;c.notes=document.getElementById('e-notes').value;
+    if(old!==phone)delete data[old];data[phone]=c;sd(data);closeEdit();renderStats();renderTbl();toast('Saved!');
+  }
+  function delCust(){
+    const phone=document.getElementById('e-key').value;if(!confirm('Delete this customer?'))return;
+    const data=gd();delete data[phone];sd(data);closeEdit();renderStats();renderTbl();toast('Deleted');
+  }
+  function closeEdit(){document.getElementById('edit-mb').classList.remove('on');}
+</script>
+</body>
+</html>
